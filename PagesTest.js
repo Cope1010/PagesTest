@@ -8,7 +8,7 @@ function setup() {
   
   for (var y = 0; y < 14; y++) {
     for (var x = 0; x < 24; x++) {
-      tiles.push(new Tile(225 + x * 40, 300 + y * 40, (y * 24) + x)); 
+      tiles.push(new Tile(225 + x * 40, 300 + y * 40, (y * 24) + x, 2000)); 
     }
   }
 }
@@ -18,6 +18,7 @@ function draw() {
   
   for (var i = 0; i < tiles.length; i++) {
     tiles[i].checkMouse();
+    tiles[i].update();
     tiles[i].display();
   }
   
@@ -26,19 +27,34 @@ function draw() {
   text(parseInt(averageFrames / frameCount, 10), 1000, 40);
 }
 
-function Tile(xLoc, yLoc, index) {
+function Tile(xLoc, yLoc, index, breakTime) {
   var loc = createVector(xLoc, yLoc);
   var mouseHovering = false;
-  var red = 0;
-  var green = 0;
-  var blue = 0;
+  var tColor = 0;
+  var breaking = false;
   var intact = true;
+  var breakState = breakTime;
+  var breakStart = 0;
   
   this.display = function() {
-    if (!mouseHovering) fill(red, blue, green);
-    else fill(120, 120, 120);
-    noStroke();
-    if (intact) rect(xLoc, yLoc, 40, 40); 
+    if (intact) { 
+      noStroke();
+      if (!mouseHovering) fill(tColor);
+      else fill(255, 0, 0);
+      rect(xLoc, yLoc, 40, 40);
+      fill(tColor);
+      rect(xLoc+1, yLoc+1, 38, 38);
+    }
+  }
+  
+  this.update = function() {
+    if (intact && breaking) {
+      breakState = millis() - breakStart;
+      tColor = map(breakState, breakTime, 0, 255, 0);
+      if (breakState > breakTime) {
+        intact = false;
+      }
+    }
   }
   
   this.checkMouse = function() {
@@ -54,7 +70,10 @@ function Tile(xLoc, yLoc, index) {
   }
   
   this.destroy = function() {
-    intact = false; 
+    if (!breaking && intact) {
+      breaking = true;
+      breakStart = millis();
+    }
   }
 }
 
